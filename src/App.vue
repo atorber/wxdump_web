@@ -14,10 +14,10 @@ import FavoriteIcon from "@/assets/icon/FavoriteIcon.vue";
 import CollapseOpenIcon from "@/assets/icon/CollapseOpenIcon.vue";
 import CollapseCloseIcon from "@/assets/icon/CollapseCloseIcon.vue";
 
-import {RouterLink, RouterView} from 'vue-router'
-import {ref, onMounted, withCtx, watch} from 'vue'
+import { RouterLink, RouterView } from 'vue-router'
+import { ref, onMounted, withCtx, watch } from 'vue'
 import router from "@/router";
-import {is_db_init, is_use_local_data} from "@/utils/common_utils";
+import { is_db_init, is_use_local_data } from "@/utils/common_utils";
 import ChatRecordsMain from "@/components/chat/ChatRecordsMain.vue";
 
 const isCollapse = ref(true);
@@ -28,7 +28,7 @@ onMounted(() => {
   // localStorage.setItem('isDbInit', "t");
   is_local_data.value = localStorage.getItem('isUseLocalData') === 't';
   console.log("is_local_data", is_local_data.value);
-  if(!is_local_data.value) {
+  if (!is_local_data.value) {
     is_db_init();
   }
 })
@@ -46,17 +46,17 @@ const handleClose = (key: string, keyPath: string[]) => {
 
 <template>
   <div class="export-main" v-if="is_local_data">
-    <chat-records-main wxid="wxid_test"/>
+    <chat-records-main wxid="wxid_test" />
   </div>
   <div id="appbg" v-else>
     <el-container class="layout-container-demo" style="height: 100%;background:none;">
       <el-aside :width="isCollapse ? '64px' : '160px'">
         <el-container class="sidebar-container">
           <el-menu default-active="1" class="el-menu-vertical-demo" :collapse="isCollapse" :router='true'
-                   :collapse-transition="false" :show-timeout="0" :hide-timeout="0">
+            :collapse-transition="false" :show-timeout="0" :hide-timeout="0">
 
             <el-radio-group v-model="isCollapse"
-                            style="margin-bottom: 20px;margin-top: 10px;margin-left: 10px;max-height: 30px">
+              style="margin-bottom: 20px;margin-top: 10px;margin-left: 10px;max-height: 30px">
               <el-radio-button :label="false" v-if="isCollapse">
                 <collapse-open-icon></collapse-open-icon>
               </el-radio-button>
@@ -108,7 +108,7 @@ const handleClose = (key: string, keyPath: string[]) => {
           </el-menu>
 
           <el-menu default-active="1" class="el-menu-vertical-demo" :collapse="isCollapse" @open="handleOpen"
-                   @close="handleClose" :router='true'>
+            @close="handleClose" :router='true'>
             <el-menu-item index='/about'>
               <about-icon></about-icon>
               <template #title>关于我们</template>
@@ -126,7 +126,7 @@ const handleClose = (key: string, keyPath: string[]) => {
       </el-aside>
 
       <el-main>
-        <RouterView/>
+        <RouterView />
       </el-main>
 
     </el-container>
@@ -134,7 +134,6 @@ const handleClose = (key: string, keyPath: string[]) => {
 </template>
 
 <style scoped>
-
 .export-main {
   position: absolute;
   top: 0;
