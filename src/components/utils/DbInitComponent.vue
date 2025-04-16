@@ -5,6 +5,7 @@ import {defineEmits, onMounted, ref, watch} from "vue";
 import {ElTable, ElTableColumn, ElMessage, ElMessageBox} from "element-plus";
 import type {Action} from 'element-plus'
 import router from "@/router";
+import { Clock, MagicStick, Setting } from '@element-plus/icons-vue'
 
 interface wxinfo {
   pid: string;
@@ -25,7 +26,8 @@ interface LocalWxid {
 const percentage = ref(0);
 const startORstop = ref(-1);  // 用于进度条的开始和停止 0表示0% 1表示100%
 
-const init_type = ref("");
+type InitType = 'last' | 'auto' | 'custom'| '';
+const init_type = ref<InitType>('');
 
 const is_init = ref(false);
 const wxinfoData = ref<wxinfo[]>([]);
@@ -45,11 +47,13 @@ const local_wxids = ref<LocalWxid[]>([]);
 const db_init = (init: boolean) => {
   if (init) {
     localStorage.setItem('isDbInit', "t");
-    router.push('/');
+    // router.push('/');
     ElMessage({
       type: 'success',
       message: '初始化成功！',
+      duration: 3000,
     })
+    init_type.value = '';
   }
 }
 
@@ -231,200 +235,147 @@ watch(init_type, (val) => {
 <template>
   <div class="db-init-container">
     <!-- 初始选择界面 -->
-    <div v-if="init_type === ''" class="init-options">
-      <el-card class="option-card" @click="init_type = 'last'">
+    <div v-if="!init_type" class="init-options">
+      <el-card 
+        class="option-card" 
+        @click="init_type = 'last'"
+        shadow="hover"
+      >
         <div class="option-content">
-          <el-radio v-model="init_type" label="last" class="option-radio" />
+          <el-icon class="option-icon"><Clock /></el-icon>
           <div class="option-title">使用历史数据</div>
           <div class="option-desc">使用上次的配置信息进行初始化</div>
         </div>
       </el-card>
 
-      <el-card class="option-card" @click="init_type = 'auto'">
+      <el-card 
+        class="option-card" 
+        @click="init_type = 'auto'"
+        shadow="hover"
+      >
         <div class="option-content">
-          <el-radio v-model="init_type" label="auto" class="option-radio" />
+          <el-icon class="option-icon"><MagicStick /></el-icon>
           <div class="option-title">自动解密已登录微信</div>
           <div class="option-desc">自动检测并解密当前登录的微信</div>
         </div>
       </el-card>
 
-      <el-card class="option-card" @click="init_type = 'custom'">
+      <el-card 
+        class="option-card" 
+        @click="init_type = 'custom'"
+        shadow="hover"
+      >
         <div class="option-content">
-          <el-radio v-model="init_type" label="custom" class="option-radio" />
-          <div class="option-title">自定义文件位置</div>
-          <div class="option-desc">手动指定数据库和密钥位置</div>
+          <el-icon class="option-icon"><Setting /></el-icon>
+          <div class="option-title">自定义配置</div>
+          <div class="option-desc">手动配置微信路径和密钥</div>
         </div>
       </el-card>
     </div>
 
-    <!-- 上次数据 -->
-    <el-card v-else-if="init_type==='last'" class="main-card">
-      <template #header>
-        <div class="card-header">
-          <span class="title">选择要查看的微信</span>
-        </div>
-      </template>
-
-      <el-table 
-        :data="local_wxids" 
-        @current-change="selectLastWx" 
-        highlight-current-row 
-        class="wx-table"
-      >
-        <el-table-column prop="wxid" label="微信原始ID" min-width="200" />
-      </el-table>
-
-      <div class="action-area">
-        <el-button 
-          type="primary" 
-          @click="init_last"
-          :loading="decryping"
-          class="submit-btn"
-        >
-          确定
-        </el-button>
-      </div>
-    </el-card>
-
-    <!-- 自动解密和显示 -->
-    <el-card v-else-if="init_type==='auto'" class="main-card">
-      <template #header>
-        <div class="card-header">
-          <span class="title">选择要查看的微信</span>
-          <span class="subtitle">(会清空work下对应wxid数据)</span>
-        </div>
-      </template>
-
-      <ProgressBar v-if="decryping" :startORstop="startORstop" class="progress-bar" />
-
-      <template v-else>
-        <el-table 
-          :data="wxinfoData" 
-          @current-change="selectWx" 
-          highlight-current-row 
-          class="wx-table"
-        >
-          <el-table-column prop="pid" label="进程ID" min-width="80" />
-          <el-table-column prop="version" label="微信版本" min-width="100" />
-          <el-table-column prop="account" label="账号" min-width="120" />
-          <el-table-column prop="nickname" label="昵称" min-width="120" />
-          <el-table-column prop="wxid" label="微信原始ID" min-width="200" />
+    <!-- 历史数据初始化 -->
+    <div v-if="init_type === 'last'" class="init-form">
+      <el-card class="form-card" shadow="hover">
+        <template #header>
+          <div class="form-header">
+            <span>使用历史数据初始化</span>
+            <el-button type="primary" link @click="init_type = ''">返回</el-button>
+          </div>
+        </template>
+        <el-table :data="local_wxids" @row-click="selectLastWx" highlight-current-row>
+          <el-table-column prop="wxid" label="微信ID" />
         </el-table>
-
-        <div class="action-area">
-          <el-button 
-            type="primary" 
-            @click="okWx"
-            :loading="decryping"
-            class="submit-btn"
-          >
-            确定{{ oneWx }}
-          </el-button>
+        <div class="form-footer">
+          <el-button type="primary" @click="init_last" :loading="decryping">开始初始化</el-button>
         </div>
-      </template>
-    </el-card>
+      </el-card>
+    </div>
 
-    <!-- 自定义参数 -->
-    <el-card v-else-if="init_type==='custom'" class="main-card">
-      <template #header>
-        <div class="card-header">
-          <span class="title">自定义文件位置</span>
-        </div>
-      </template>
-
-      <ProgressBar v-if="decryping" :startORstop="startORstop" class="progress-bar" />
-
-      <template v-else>
-        <el-radio-group v-model="isUseKey" class="radio-group">
-          <el-radio label="true">使用 KEY</el-radio>
-          <el-radio label="false">不使用 KEY</el-radio>
-        </el-radio-group>
-
-        <div class="description">
-          <div v-if="isUseKey=='false'" class="desc-item">
-            <h4>说明：</h4>
-            <p>1、表示数据库已解密并合并</p>
-            <p>2、合并后的数据库需要包含(MediaMSG,MSG,MicroMsg,OpenIMMsg)这些数据库合并的内容</p>
+    <!-- 自动解密初始化 -->
+    <div v-if="init_type === 'auto'" class="init-form">
+      <el-card class="form-card" shadow="hover">
+        <template #header>
+          <div class="form-header">
+            <span>自动解密已登录微信</span>
+            <el-button type="primary" link @click="init_type = ''">返回</el-button>
           </div>
-          <div v-if="isUseKey=='true'" class="desc-item">
-            <h4>说明：</h4>
-            <p>1、自动根据key解密微信文件夹下的数据库</p>
-            <p>2、必须保证key正确，否则解密失败</p>
-          </div>
+        </template>
+        <el-table :data="wxinfoData" @row-click="selectWx" highlight-current-row>
+          <el-table-column prop="account" label="账号" />
+          <el-table-column prop="nickname" label="昵称" />
+          <el-table-column prop="wxid" label="微信ID" />
+        </el-table>
+        <div class="form-footer">
+          <el-button type="primary" @click="okWx" :loading="decryping">开始初始化</el-button>
         </div>
+      </el-card>
+    </div>
 
-        <el-divider />
-
-        <el-form label-position="top" class="custom-form">
-          <el-form-item v-if="isUseKey=='true'" label="密钥key">
-            <el-input 
-              v-model="key" 
-              placeholder="密钥key (64位)"
-              clearable
-            />
+    <!-- 自定义配置初始化 -->
+    <div v-if="init_type === 'custom'" class="init-form">
+      <el-card class="form-card" shadow="hover">
+        <template #header>
+          <div class="form-header">
+            <span>自定义配置初始化</span>
+            <el-button type="primary" link @click="init_type = ''">返回</el-button>
+          </div>
+        </template>
+        <el-form label-position="top">
+          <el-form-item label="微信路径">
+            <el-input v-model="wx_path" placeholder="请输入微信路径" />
           </el-form-item>
-
-          <el-form-item v-if="isUseKey=='false'" label="merge_all.db 文件路径">
-            <el-input 
-              v-model="merge_path" 
-              placeholder="(MediaMSG.db,MSG.db,MicroMsg.db,OpenIMMsg.db)合并后的数据库"
-              clearable
-            />
+          <el-form-item label="合并路径">
+            <el-input v-model="merge_path" placeholder="请输入合并路径" />
           </el-form-item>
-
-          <el-form-item label="微信文件夹路径">
-            <el-input 
-              v-model="wx_path" 
-              placeholder="C:\***\WeChat Files\wxid_*******"
-              clearable
-            />
+          <el-form-item label="微信ID">
+            <el-input v-model="my_wxid" placeholder="请输入微信ID" />
           </el-form-item>
-
-          <el-form-item label="微信原始id">
-            <el-input 
-              v-model="my_wxid" 
-              placeholder="wxid_*******"
-              clearable
-            />
-          </el-form-item>
-
           <el-form-item>
-            <el-button 
-              type="primary" 
-              @click="isUseKey=='true' ? init_key() : init_nokey()"
-              :loading="decryping"
-              class="submit-btn"
-            >
-              确定
-            </el-button>
+            <el-radio-group v-model="isUseKey">
+              <el-radio label="true">使用密钥</el-radio>
+              <el-radio label="false">不使用密钥</el-radio>
+            </el-radio-group>
+          </el-form-item>
+          <el-form-item v-if="isUseKey === 'true'" label="密钥">
+            <el-input v-model="key" placeholder="请输入密钥" />
           </el-form-item>
         </el-form>
-      </template>
-    </el-card>
+        <div class="form-footer">
+          <el-button type="primary" @click="isUseKey === 'true' ? init_key() : init_nokey()" :loading="decryping">
+            开始初始化
+          </el-button>
+        </div>
+      </el-card>
+    </div>
+
+    <!-- 进度条 -->
+    <ProgressBar v-if="decryping" :percentage="percentage" :startORstop="startORstop" />
   </div>
 </template>
 
 <style scoped>
 .db-init-container {
-  min-height: 100vh;
-  background-color: #f5f7fa;
+  height: 100%;
+  /* background: linear-gradient(135deg, #f5f7fa 0%, #e4e7ed 100%); */
   padding: 20px;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
 }
 
 .init-options {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 20px;
-  justify-content: center;
-  flex-wrap: wrap;
+  width: 100%;
+  max-width: 1200px;
+  margin-bottom: 20px;
 }
 
 .option-card {
-  width: 300px;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.3s ease;
+  border-radius: 12px;
 }
 
 .option-card:hover {
@@ -432,23 +383,26 @@ watch(init_type, (val) => {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
+.option-card.selected {
+  border: 2px solid #409EFF;
+}
+
 .option-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
   padding: 20px;
   text-align: center;
 }
 
-.option-radio {
-  margin-bottom: 10px;
+.option-icon {
+  font-size: 32px;
+  color: #409EFF;
+  margin-bottom: 16px;
 }
 
 .option-title {
   font-size: 18px;
   font-weight: bold;
-  margin-bottom: 10px;
   color: #303133;
+  margin-bottom: 8px;
 }
 
 .option-desc {
@@ -456,83 +410,48 @@ watch(init_type, (val) => {
   color: #606266;
 }
 
-.main-card {
-  width: 90%;
-  max-width: 1000px;
-  border-radius: 8px;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+.init-form {
+  width: 100%;
+  max-width: 800px;
 }
 
-.card-header {
+.form-card {
+  border-radius: 12px;
+}
+
+.form-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-}
-
-.title {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: bold;
-  color: #303133;
 }
 
-.subtitle {
-  font-size: 14px;
-  color: #909399;
-  margin-left: 10px;
-}
-
-.wx-table {
-  margin: 20px 0;
-}
-
-.action-area {
+.form-footer {
   margin-top: 20px;
-  display: flex;
-  justify-content: center;
+  text-align: center;
 }
 
-.submit-btn {
-  width: 100%;
+:deep(.el-table) {
+  border-radius: 8px;
+  overflow: hidden;
 }
 
-.radio-group {
-  margin-bottom: 20px;
+:deep(.el-table__row) {
+  cursor: pointer;
 }
 
-.description {
-  margin: 20px 0;
-  padding: 15px;
-  background-color: #f5f7fa;
-  border-radius: 4px;
+:deep(.el-form-item__label) {
+  font-weight: 500;
 }
 
-.desc-item h4 {
-  margin: 0 0 10px 0;
-  color: #303133;
-}
-
-.desc-item p {
-  margin: 5px 0;
-  color: #606266;
-}
-
-.custom-form {
-  margin-top: 20px;
-}
-
-.progress-bar {
-  margin: 20px 0;
-}
-
-:deep(.el-input__wrapper) {
-  box-shadow: 0 0 0 1px #dcdfe6;
-}
-
-:deep(.el-input__wrapper:hover) {
-  box-shadow: 0 0 0 1px #c0c4cc;
-}
-
-:deep(.el-input__wrapper.is-focus) {
-  box-shadow: 0 0 0 1px #409EFF;
+@media screen and (max-width: 768px) {
+  .init-options {
+    grid-template-columns: 1fr;
+  }
+  
+  .init-form {
+    width: 95%;
+  }
 }
 </style>

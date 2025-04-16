@@ -84,12 +84,12 @@ const decrypt = async () => {
   padding: 20px;
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: top;
 }
 
 .merge-card {
-  width: 80%;
-  max-width: 800px;
+  width: 90%;
+  /* max-width: 800px; */
   border-radius: 8px;
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
 }

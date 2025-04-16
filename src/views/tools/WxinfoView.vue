@@ -46,8 +46,8 @@ const downloadCSV = (csvContent: string, fileName: string) => {
   const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
 
-  if (navigator.msSaveBlob) {
-    navigator.msSaveBlob(blob, fileName);
+  if ((navigator as any).msSaveBlob) {
+    (navigator as any).msSaveBlob(blob, fileName);
   } else {
     link.href = URL.createObjectURL(blob);
     link.setAttribute('download', fileName);
