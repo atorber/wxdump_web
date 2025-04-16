@@ -50,7 +50,7 @@ const handleClose = (key: string, keyPath: string[]) => {
   </div>
   <div id="appbg" v-else>
     <el-container class="layout-container-demo" style="height: 100%;background:none;">
-      <el-aside :width="isCollapse ? '80px' : '175px'">
+      <el-aside :width="isCollapse ? '64px' : '160px'">
         <el-container class="sidebar-container">
           <el-menu default-active="1" class="el-menu-vertical-demo" :collapse="isCollapse" :router='true'
             :collapse-transition="true" :show-timeout="200" :hide-timeout="200">
@@ -220,7 +220,7 @@ header {
 
 .collapse-btn-container {
   position: absolute;
-  right: -14px;
+  right: 0px;
   top: 350px;
   transform: translateY(-50%);
   z-index: 1;
